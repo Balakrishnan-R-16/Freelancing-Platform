@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+  <defs>
+    <!-- Drop shadow for depth -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- gradientUnits="userSpaceOnUse" is REQUIRED for gradients on perfectly horizontal/vertical lines, otherwise they disappear! -->
+    <linearGradient id="gradTop" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00A8FF" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+
+    <linearGradient id="gradDiag" x1="100" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+
+    <linearGradient id="gradBot" x1="0" y1="100" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#9333EA" />
+    </linearGradient>
+  </defs>
+
+  <!-- Bottom Bar (Back Layer) -->
+  <line x1="25" y1="75" x2="75" y2="75" stroke="url(#gradBot)" stroke-width="24" stroke-linecap="round" />
+
+  <!-- Diagonal Bar (Middle Layer) -->
+  <line x1="75" y1="25" x2="25" y2="75" stroke="url(#gradDiag)" stroke-width="24" stroke-linecap="round" filter="url(#shadow)" />
+
+  <!-- Top Bar (Front Layer) -->
+  <line x1="25" y1="25" x2="75" y2="25" stroke="url(#gradTop)" stroke-width="24" stroke-linecap="round" filter="url(#shadow)" />
+</svg>

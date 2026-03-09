@@ -1,0 +1,27 @@
+# ==========================
+# Blockchain — Hardhat / Solidity
+# ==========================
+
+# Dependencies
+node_modules/
+
+# Hardhat
+cache/
+artifacts/
+
+# Coverage
+coverage/
+coverage.json
+
+# TypeChain
+typechain/
+typechain-types/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+
+# Logs
+*.log

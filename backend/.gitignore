@@ -1,0 +1,29 @@
+# ==========================
+# Backend — Spring Boot / Maven
+# ==========================
+
+# Build output
+target/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+
+# Logs
+*.log
+spring.log
+
+# OS
+.DS_Store
+
+# Application secrets
+application-local.properties
+application-secret.properties
