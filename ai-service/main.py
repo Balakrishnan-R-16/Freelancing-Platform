@@ -1,10 +1,15 @@
 """
 AI-Powered Freelancing Platform - AI Microservice
 FastAPI application providing ML-based recommendations, skill gap analysis,
-employer-freelancer matching, and analytics.
+employer-freelancer matching, analytics, and Gemini-powered resume analysis.
 """
 
-from fastapi import FastAPI, HTTPException
+import os
+import json
+import io
+import time
+import logging
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -14,15 +19,38 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 from collections import Counter
 
+# PDF parsing
+try:
+    from PyPDF2 import PdfReader
+except ImportError:
+    PdfReader = None
+
+# Gemini AI
+try:
+    import google.generativeai as genai
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel("gemini-flash-lite-latest")
+        logging.info("Gemini AI configured successfully")
+    else:
+        gemini_model = None
+        logging.warning("GEMINI_API_KEY not set — resume parsing will be unavailable")
+except ImportError:
+    gemini_model = None
+    logging.warning("google-generativeai not installed")
+
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title="AI Freelance Platform - ML Service",
-    description="Machine Learning microservice for job recommendations, skill gap analysis, matching, and analytics",
-    version="1.0.0",
+    description="Machine Learning microservice for job recommendations, skill gap analysis, matching, analytics, and Gemini-powered resume analysis",
+    version="2.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:8080"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -349,6 +377,284 @@ def generate_analytics(request: AnalyticsRequest):
             "most_demanded_skill": skill_demand[0][0] if skill_demand else "N/A",
         },
     }
+
+
+# ── Gemini-Powered Resume & Smart Analysis Endpoints ─────────────
+
+def _extract_pdf_text(file_bytes: bytes) -> str:
+    """Extract text from a PDF file."""
+    if PdfReader is None:
+        raise HTTPException(status_code=500, detail="PyPDF2 not installed")
+    reader = PdfReader(io.BytesIO(file_bytes))
+    text = ""
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text + "\n"
+    return text.strip()
+
+
+def _call_gemini(prompt: str) -> str:
+    """Call Gemini API and return text response."""
+    if gemini_model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Zyntra AI Core is temporarily unavailable. Check backend configuration."
+        )
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = gemini_model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            logger.error(f"Gemini API error (attempt {attempt + 1}/{max_retries}): {e}")
+            if "429" in str(e) and attempt < max_retries - 1:
+                time.sleep(4 ** attempt)  # 1s, 4s backoff
+                continue
+            if attempt == max_retries - 1:
+                raise HTTPException(status_code=500, detail=f"Smart Engine temporarily unavailable. Please try again. {str(e)}")
+
+
+@app.post("/parse-resume")
+async def parse_resume(file: UploadFile = File(...)):
+    """
+    Upload a PDF resume → Gemini extracts skills, experience, education, and summary.
+    Returns structured JSON with extracted profile data.
+    """
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+
+    file_bytes = await file.read()
+    if len(file_bytes) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=400, detail="File too large (max 10MB)")
+
+    resume_text = _extract_pdf_text(file_bytes)
+    if not resume_text or len(resume_text) < 50:
+        raise HTTPException(status_code=400, detail="Could not extract enough text from the PDF. Make sure it's not a scanned image.")
+
+    prompt = f"""You are an expert resume parser for a freelancing platform. Analyze the following resume text and extract structured information.
+
+RESUME TEXT:
+---
+{resume_text[:8000]}
+---
+
+Return ONLY valid JSON (no markdown, no code fences) with this exact structure:
+{{
+  "name": "Full Name",
+  "title": "Professional Title (e.g. Full-Stack Developer, AI Engineer)",
+  "bio": "A compelling 2-3 sentence professional summary",
+  "skills": ["skill1", "skill2", ...],
+  "experience_years": 0,
+  "education": ["Degree - Institution"],
+  "certifications": ["cert1", "cert2"],
+  "languages": ["English", ...],
+  "expertise_level": "Junior/Mid/Senior/Expert"
+}}
+
+IMPORTANT:
+- Extract ALL technical skills, programming languages, frameworks, tools mentioned
+- Include soft skills only if explicitly mentioned
+- For the bio, write it in first person as if the freelancer is describing themselves
+- Be thorough with skills — extract every technology, tool, framework mentioned
+"""
+
+    response_text = _call_gemini(prompt)
+
+    # Parse JSON from response (handle potential markdown wrapping)
+    try:
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+            cleaned = cleaned.rsplit("```", 1)[0]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+        parsed = json.loads(cleaned.strip())
+    except json.JSONDecodeError:
+        # Try to find JSON object in the response
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            parsed = json.loads(json_match.group())
+        else:
+            raise HTTPException(status_code=500, detail="Failed to parse Zyntra AI Core response as JSON")
+
+    # Ensure required fields exist
+    result = {
+        "name": parsed.get("name", "Unknown"),
+        "title": parsed.get("title", "Freelancer"),
+        "bio": parsed.get("bio", ""),
+        "skills": parsed.get("skills", []),
+        "experience_years": parsed.get("experience_years", 0),
+        "education": parsed.get("education", []),
+        "certifications": parsed.get("certifications", []),
+        "languages": parsed.get("languages", ["English"]),
+        "expertise_level": parsed.get("expertise_level", "Mid"),
+        "resume_text": resume_text[:5000],  # Store truncated text for future use
+    }
+
+    return result
+
+
+class SmartRecommendRequest(BaseModel):
+    resume_skills: List[str]
+    resume_bio: str = ""
+    jobs: List[JobData]
+
+
+@app.post("/smart-recommend")
+def smart_recommend_jobs(request: SmartRecommendRequest):
+    """
+    Use Gemini to intelligently match a freelancer's resume skills against all available jobs.
+    Returns ranked job recommendations with AI-generated reasoning.
+    """
+    if not request.jobs:
+        return {"recommendations": [], "message": "No jobs available"}
+
+    jobs_summary = ""
+    for j in request.jobs[:15]:  # Limit to 15 jobs for prompt size
+        skills_str = ", ".join(j.skills_required) if j.skills_required else "Not specified"
+        jobs_summary += f"- Job ID {j.id}: \"{j.title}\" | Skills: [{skills_str}] | Budget: ₹{j.budget}\n  Description: {j.description[:200]}\n\n"
+
+    prompt = f"""You are an AI career advisor for a freelancing platform. Match this freelancer with the best jobs.
+
+FREELANCER PROFILE:
+- Skills: {', '.join(request.resume_skills)}
+- Bio: {request.resume_bio[:500]}
+
+AVAILABLE JOBS:
+{jobs_summary}
+
+Return ONLY valid JSON (no markdown, no code fences) as an array of matches, ranked from best to worst fit:
+[
+  {{
+    "job_id": 1,
+    "match_score": 85,
+    "matched_skills": ["React", "Node.js"],
+    "missing_skills": ["Docker"],
+    "reason": "Short 1-2 sentence explanation of why this is a good match"
+  }}
+]
+
+Rules:
+- Score from 0-100 based on skill overlap, relevance, and potential
+- Include ALL jobs, even poor matches (they help the freelancer see gaps)
+- Be specific about which skills match and which are missing
+- Consider transferable skills (e.g., React experience helps with React Native)
+"""
+
+    response_text = _call_gemini(prompt)
+
+    try:
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+            cleaned = cleaned.rsplit("```", 1)[0]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+        recommendations = json.loads(cleaned.strip())
+    except json.JSONDecodeError:
+        json_match = re.search(r'\[[\s\S]*\]', response_text)
+        if json_match:
+            recommendations = json.loads(json_match.group())
+        else:
+            recommendations = []
+
+    # Enrich with job titles
+    job_map = {j.id: j.title for j in request.jobs}
+    for rec in recommendations:
+        rec["title"] = job_map.get(rec.get("job_id"), "Unknown Job")
+
+    recommendations.sort(key=lambda x: x.get("match_score", 0), reverse=True)
+    return {"recommendations": recommendations}
+
+
+class SmartSkillGapRequest(BaseModel):
+    resume_skills: List[str]
+    resume_bio: str = ""
+    jobs: List[JobData]
+
+
+@app.post("/smart-skill-gap")
+def smart_skill_gap(request: SmartSkillGapRequest):
+    """
+    Use Gemini to perform deep skill gap analysis between freelancer resume and ALL job openings.
+    Provides personalized learning recommendations.
+    """
+    if not request.jobs:
+        return {"analysis": "No jobs available for comparison"}
+
+    all_required_skills = set()
+    jobs_summary = ""
+    for j in request.jobs[:15]:
+        skills_str = ", ".join(j.skills_required) if j.skills_required else "Not specified"
+        all_required_skills.update(s.lower() for s in j.skills_required)
+        jobs_summary += f"- \"{j.title}\": [{skills_str}]\n"
+
+    prompt = f"""You are an expert career advisor analyzing skill gaps for a freelancer.
+
+FREELANCER'S CURRENT SKILLS: {', '.join(request.resume_skills)}
+FREELANCER BIO: {request.resume_bio[:500]}
+
+JOB OPENINGS ON THE PLATFORM:
+{jobs_summary}
+
+Perform a comprehensive skill gap analysis. Return ONLY valid JSON (no markdown, no code fences):
+{{
+  "overall_readiness": 75,
+  "strong_skills": [
+    {{{{
+      "skill": "React",
+      "proficiency": "Advanced",
+      "matching_jobs": ["Build DeFi Dashboard", "Mobile App"]
+    }}}}
+  ],
+  "missing_skills": [
+    {{{{
+      "skill": "Docker",
+      "priority": "HIGH",
+      "why": "Required by 3 open positions",
+      "learning_path": "Start with Docker basics on Docker.com, then learn Docker Compose",
+      "time_to_learn": "2-3 weeks"
+    }}}}
+  ],
+  "transferable_skills": [
+    {{{{
+      "have": "React",
+      "can_transfer_to": "React Native",
+      "gap_effort": "Low — learn mobile-specific APIs"
+    }}}}
+  ],
+  "career_advice": "2-3 sentences of personalized career advice",
+  "recommended_learning_order": ["skill1", "skill2", "skill3"]
+}}
+
+Rules:
+- overall_readiness is 0-100 showing how ready they are for available jobs
+- Prioritize missing skills that appear in MULTIPLE job postings
+- HIGH priority = needed for 2+ jobs, MEDIUM = needed for 1 job, LOW = nice to have
+- Be practical and specific with learning paths
+- Consider the freelancer's existing skills when suggesting learning order
+"""
+
+    response_text = _call_gemini(prompt)
+
+    try:
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+            cleaned = cleaned.rsplit("```", 1)[0]
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+        analysis = json.loads(cleaned.strip())
+    except json.JSONDecodeError:
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            analysis = json.loads(json_match.group())
+        else:
+            raise HTTPException(status_code=500, detail="Failed to parse Zyntra AI Core skill gap response")
+
+    return analysis
 
 
 if __name__ == "__main__":

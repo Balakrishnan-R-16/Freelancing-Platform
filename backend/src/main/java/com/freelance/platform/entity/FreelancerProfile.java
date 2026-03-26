@@ -50,14 +50,21 @@ public class FreelancerProfile {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "resume_text", columnDefinition = "TEXT")
+    private String resumeText;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (avgRating == null) avgRating = BigDecimal.ZERO;
-        if (totalEarnings == null) totalEarnings = BigDecimal.ZERO;
-        if (jobsCompleted == null) jobsCompleted = 0;
-        if (hourlyRate == null) hourlyRate = BigDecimal.ZERO;
+        if (avgRating == null)
+            avgRating = BigDecimal.ZERO;
+        if (totalEarnings == null)
+            totalEarnings = BigDecimal.ZERO;
+        if (jobsCompleted == null)
+            jobsCompleted = 0;
+        if (hourlyRate == null)
+            hourlyRate = BigDecimal.ZERO;
     }
 
     @PreUpdate

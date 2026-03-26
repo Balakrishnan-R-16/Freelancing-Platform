@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import FeaturesSection from '../components/FeaturesSection';
 
 export default function Landing() {
     const [stats, setStats] = useState({
@@ -10,10 +11,12 @@ export default function Landing() {
     });
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchStats = async () => {
             try {
                 const response = await fetch('/api/dashboard/stats');
-                if (response.ok) {
+                if (response.ok && isMounted) {
                     const data = await response.json();
 
                     const formatNumber = (num) => {
@@ -25,12 +28,12 @@ export default function Landing() {
                     const formatCurrency = (num) => {
                         if (num >= 1000000) return '₹' + (num / 1000000).toFixed(1) + 'M+';
                         if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + 'K+';
-                        return '₹' + num.toLocaleString();
+                        return '₹' + num.toLocaleString() + '+'; // Added + for consistency with 'Secure Payments' in UI
                     };
 
                     setStats({
                         totalFreelancers: formatNumber(data.totalFreelancers || 500),
-                        totalJobs: formatNumber(data.totalJobs || 1200),
+                        totalJobs: formatNumber(data.completedContracts !== undefined ? data.completedContracts : 1200),
                         totalSecured: formatCurrency(data.extras?.totalSecured || 2000000),
                         satisfactionRate: (data.extras?.satisfactionRate || 98) + '%'
                     });
@@ -41,6 +44,29 @@ export default function Landing() {
         };
 
         fetchStats();
+
+        // Setup SSE for real-time updates
+        const eventSource = new EventSource('/api/events/stream');
+
+        const handleEvent = () => {
+            fetchStats();
+        };
+
+        // Events that might affect overall stats
+        const events = [
+            'job_created', 'job_updated', 'job_deleted',
+            'contract_created', 'contract_updated', 'contract_completed',
+            'review_created', 'bid_accepted', 'user_registered', 'user_updated'
+        ];
+
+        events.forEach(event => {
+            eventSource.addEventListener(event, handleEvent);
+        });
+
+        return () => {
+            isMounted = false;
+            eventSource.close();
+        };
     }, []);
 
     const statCards = [
@@ -112,64 +138,39 @@ export default function Landing() {
                                 Explore Projects
                             </Link>
                         </div>
-                    </div>
 
-                    {/* Right Column — Stats Grid */}
-                    <div className="hero-v2__right">
-                        <div className="hero-v2__stats-grid">
+                        {/* Stats Section under CTA */}
+                        <div style={{ marginTop: '3.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
                             {statCards.map((stat, index) => (
-                                <div
-                                    className="hero-v2__stat-card"
-                                    key={index}
-                                    style={{ animationDelay: `${0.15 + index * 0.1}s` }}
-                                >
-                                    <div className="hero-v2__stat-icon">{stat.icon}</div>
-                                    <div className="hero-v2__stat-value">{stat.value}</div>
-                                    <div className="hero-v2__stat-label">{stat.label}</div>
+                                <div key={index} style={{ animationDelay: `${0.15 + index * 0.1}s`, animation: 'heroFadeUp 0.8s forwards' }}>
+                                    <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#fff' }}>{stat.value}</div>
+                                    <div style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500', marginTop: '0.2rem' }}>{stat.label}</div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* Right Column — Video */}
+                    <div className="hero-v2__right">
+                        <div className="hero-v2__video-wrapper">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="hero-v2__video"
+                                poster="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=1200"
+                            >
+                                <source src="https://videos.pexels.com/video-files/3254066/3254066-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Features Section */}
-            <section className="features" id="features-section">
-                <h2>Why Choose Zyntra?</h2>
-                <p className="subtitle">Powered by cutting-edge AI and secured by blockchain technology</p>
-                <div className="features-grid stagger">
-                    <div className="feature-card">
-                        <div className="feature-icon">🤖</div>
-                        <h3>AI Job Matching</h3>
-                        <p>Our ML algorithms analyze skills, experience, and preferences to recommend the perfect freelancer-job matches instantly.</p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">🔗</div>
-                        <h3>Blockchain Escrow</h3>
-                        <p>Funds are secured in Ethereum smart contracts. Payment is released only when work is approved — zero risk for both parties.</p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">📊</div>
-                        <h3>Skill Gap Analysis</h3>
-                        <p>AI-powered insights reveal skill gaps and recommend learning paths to help freelancers stay competitive in the market.</p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">⭐</div>
-                        <h3>Trust & Reviews</h3>
-                        <p>Transparent ratings and verified reviews build trust. Every review is tied to a completed and verified smart contract.</p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">📈</div>
-                        <h3>Analytics Dashboard</h3>
-                        <p>Real-time market analytics, demand trends, and AI-driven insights to make data-backed hiring and career decisions.</p>
-                    </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">🔒</div>
-                        <h3>Secure Payments</h3>
-                        <p>Multi-layered security with JWT authentication, encrypted transactions, and decentralized fund management.</p>
-                    </div>
-                </div>
-            </section>
+            <FeaturesSection />
 
             {/* CTA Section */}
             <section style={{ padding: '4rem 2rem', textAlign: 'center' }}>

@@ -29,4 +29,10 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @PostMapping("/google")
+    @Operation(summary = "Google OAuth login", description = "Authenticates user via Google Access Token and returns local JWT token")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody GoogleAuthRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
+    }
 }

@@ -83,7 +83,7 @@ export default function Navbar() {
                                 {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                             </div>
                             <span className="user-name">
-                                {user.username || 'bk'}
+                                {user.fullName ? user.fullName : 'Profile'}
                             </span>
                             <button className="logout-btn" onClick={handleLogout}>
                                 Logout

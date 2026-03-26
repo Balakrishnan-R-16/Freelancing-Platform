@@ -11,30 +11,31 @@ export const RealtimeProvider = ({ children }) => {
 
     useEffect(() => {
         let eventSource;
+        let reconnectDelay = 3000;
+        let reconnectTimer;
+        const maxDelay = 30000;
+
         const connect = () => {
             eventSource = new EventSource('/api/events/stream');
 
             eventSource.onopen = () => {
-                console.log('SSE Component Connected');
+                console.log('SSE Connected');
+                reconnectDelay = 3000; // Reset delay on successful connect
             };
 
-            // Setup a generic message listener or catch-all. 
-            // In Spring, when sending with name(X), event types are named. 
-            // The EventSource API listens to named events independently or uses addEventListener.
-            // Since we don't know all event names easily, we can add a few common ones.
             const handleEvent = (e) => {
                 const eventName = e.type;
-                const data = JSON.parse(e.data);
-                const payload = { type: eventName, data, timestamp: new Date() };
-
-                setEvents(prev => [payload, ...prev].slice(0, 50)); // Keep last 50 events
-                setLastEvent(payload);
-
-                // optionally dispatch a global DOM event so components can do window.addEventListener('realtime-event')
-                window.dispatchEvent(new CustomEvent('realtime-event', { detail: payload }));
+                try {
+                    const data = JSON.parse(e.data);
+                    const payload = { type: eventName, data, timestamp: new Date() };
+                    setEvents(prev => [payload, ...prev].slice(0, 50));
+                    setLastEvent(payload);
+                    window.dispatchEvent(new CustomEvent('realtime-event', { detail: payload }));
+                } catch (err) {
+                    console.warn('SSE parse error:', err);
+                }
             };
 
-            // Register known event types that the backend dispatches
             const eventNames = [
                 'job_created', 'job_updated', 'job_deleted',
                 'bid_created', 'bid_accepted', 'bid_rejected',
@@ -45,20 +46,19 @@ export const RealtimeProvider = ({ children }) => {
                 eventSource.addEventListener(evt, handleEvent);
             });
 
-            eventSource.onerror = (e) => {
-                console.error('SSE Error:', e);
+            eventSource.onerror = () => {
                 eventSource.close();
-                // Reconnect after 3 seconds
-                setTimeout(connect, 3000);
+                // Exponential backoff: 3s → 6s → 12s → ... → max 30s
+                reconnectTimer = setTimeout(connect, reconnectDelay);
+                reconnectDelay = Math.min(reconnectDelay * 2, maxDelay);
             };
         };
 
         connect();
 
         return () => {
-            if (eventSource) {
-                eventSource.close();
-            }
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            if (eventSource) eventSource.close();
         };
     }, []);
 

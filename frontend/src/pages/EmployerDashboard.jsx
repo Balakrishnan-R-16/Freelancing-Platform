@@ -375,7 +375,7 @@ export default function EmployerDashboard() {
                     <button key={tab} className={`btn ${activeTab === tab ? 'btn-primary btn-sm' : 'btn-ghost btn-sm'}`}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}
                         onClick={() => setActiveTab(tab)}>
-                        {tab === 'overview' ? <><FileText size={16} /> My Jobs</> : tab === 'matching' ? <><Sparkles size={16} /> AI Matching</> : <><TrendingUp size={16} /> Analytics</>}
+                        {tab === 'overview' ? <><FileText size={16} /> My Jobs</> : tab === 'matching' ? <><Sparkles size={16} /> TalentScan AI</> : <><TrendingUp size={16} /> Analytics</>}
                     </button>
                 ))}
             </div>
@@ -477,16 +477,19 @@ export default function EmployerDashboard() {
             )}
 
             {activeTab === 'matching' && (
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="card-title">🤖 AI-Recommended Freelancers</h3>
-                        <span className="badge badge-progress">ML Powered</span>
+                <div className="card ai-card-premium">
+                    <div className="card-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ background: 'var(--accent)', color: '#fff', padding: '0.5rem', borderRadius: '10px', boxShadow: 'var(--shadow-glow)' }}>🚀</div>
+                            <h3 className="card-title" style={{ margin: 0, fontSize: '1.2rem' }}>TalentScan AI</h3>
+                        </div>
+                        <span className="badge" style={{ background: 'var(--gradient-primary)', color: '#fff' }}>Zyntra AI Core</span>
                     </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '1rem 0' }}>
                         {aiTargetJob ? `Best matches for your "${aiTargetJob.title}" project` : 'Best matches for your projects'}
                     </p>
                     {loadingFreelancers ? (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading AI Matches...</div>
+                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading SmartAssist Matches...</div>
                     ) : freelancers.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No freelancers available yet.</div>
                     ) : freelancers.map((profile, i) => {
@@ -519,13 +522,14 @@ export default function EmployerDashboard() {
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div style={{
-                                        fontSize: '1.25rem', fontWeight: 700,
-                                        color: compatibilityScore > 90 ? 'var(--success)' : compatibilityScore > 70 ? 'var(--warning)' : 'var(--text-secondary)',
+                                        fontSize: '1.5rem', fontWeight: 800,
+                                        background: compatibilityScore > 75 ? 'var(--success)' : compatibilityScore > 50 ? 'var(--warning)' : 'var(--text-muted)',
+                                        color: '#fff', padding: '0.25rem 0.75rem', borderRadius: '10px', minWidth: '60px', textAlign: 'center',
                                     }}>
                                         {compatibilityScore}%
                                     </div>
-                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Compatibility</div>
-                                    <button className="btn btn-primary btn-sm" style={{ marginTop: '0.5rem' }}>Invite</button>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Match Score</div>
+                                    <button className="btn btn-primary btn-sm" style={{ marginTop: '0.75rem', width: '100%' }}>Invite</button>
                                 </div>
                             </div>
                         );
