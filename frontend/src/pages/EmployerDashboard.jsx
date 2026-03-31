@@ -22,7 +22,7 @@ export default function EmployerDashboard() {
     // Freelancer state
     const [freelancers, setFreelancers] = useState([]);
     const [loadingFreelancers, setLoadingFreelancers] = useState(false);
-    const [aiTargetJob, setAiTargetJob] = useState(null);
+    const [aiTargetJobId, setAiTargetJobId] = useState(null);
 
     // Form state
     const [jobForm, setJobForm] = useState({
@@ -50,11 +50,18 @@ export default function EmployerDashboard() {
         }
     }, [lastEvent, user, selectedJobForBids]);
 
+    // Determine the active target job here so it is always consistent
+    const activeAiTargetJob = myJobs.find(j => j.id === aiTargetJobId) 
+        || myJobs.find(j => j.status === 'OPEN') 
+        || myJobs[0] 
+        || null;
+
     useEffect(() => {
         if (activeTab === 'matching') {
             fetchFreelancers();
         }
-    }, [activeTab]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, aiTargetJobId, myJobs]);
 
     const fetchFreelancers = async () => {
         try {
@@ -63,28 +70,25 @@ export default function EmployerDashboard() {
             if (res.ok) {
                 const data = await res.json();
 
-                const targetJob = myJobs.find(j => j.status === 'OPEN') || myJobs[0];
-                setAiTargetJob(targetJob || null);
-
-                if (targetJob && data.length > 0) {
+                if (activeAiTargetJob && data.length > 0) {
                     try {
                         let parsedSkills = [];
                         try {
-                            parsedSkills = targetJob.skillsRequired ? JSON.parse(targetJob.skillsRequired) : [];
+                            parsedSkills = activeAiTargetJob.skillsRequired ? JSON.parse(activeAiTargetJob.skillsRequired) : [];
                         } catch (e) {
-                            parsedSkills = targetJob.skillsRequired ? targetJob.skillsRequired.split(',').map(s => s.trim()) : [];
+                            parsedSkills = activeAiTargetJob.skillsRequired ? activeAiTargetJob.skillsRequired.split(',').map(s => s.trim()) : [];
                         }
                         if (!Array.isArray(parsedSkills)) {
-                            parsedSkills = targetJob.skillsRequired ? targetJob.skillsRequired.split(',').map(s => s.trim()) : [];
+                            parsedSkills = activeAiTargetJob.skillsRequired ? activeAiTargetJob.skillsRequired.split(',').map(s => s.trim()) : [];
                         }
 
                         const matchPayload = {
                             job: {
-                                id: targetJob.id,
-                                title: targetJob.title,
-                                description: targetJob.description || '',
+                                id: activeAiTargetJob.id,
+                                title: activeAiTargetJob.title,
+                                description: activeAiTargetJob.description || '',
                                 skills_required: parsedSkills,
-                                budget: targetJob.budget || 0,
+                                budget: activeAiTargetJob.budget || 0,
                             },
                             freelancers: data.map(f => {
                                 let fSkills = [];
@@ -115,7 +119,8 @@ export default function EmployerDashboard() {
                                 const original = data.find(df => df.id === match.freelancer_id);
                                 return {
                                     ...original,
-                                    compatibilityScore: match.compatibility_score
+                                    compatibilityScore: match.compatibility_score,
+                                    breakdown: match.breakdown
                                 };
                             });
                             setFreelancers(matchedFreelancers);
@@ -478,20 +483,54 @@ export default function EmployerDashboard() {
 
             {activeTab === 'matching' && (
                 <div className="card ai-card-premium">
-                    <div className="card-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                    <div className="card-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <div style={{ background: 'var(--accent)', color: '#fff', padding: '0.5rem', borderRadius: '10px', boxShadow: 'var(--shadow-glow)' }}>🚀</div>
                             <h3 className="card-title" style={{ margin: 0, fontSize: '1.2rem' }}>TalentScan AI</h3>
+                            <span className="badge" style={{ background: 'var(--gradient-primary)', color: '#fff', marginLeft: '0.5rem' }}>Zyntra AI Core</span>
                         </div>
-                        <span className="badge" style={{ background: 'var(--gradient-primary)', color: '#fff' }}>Zyntra AI Core</span>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                            <Briefcase size={16} color="var(--text-secondary)" />
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Analyzing for:</span>
+                            <select 
+                                className="form-select" 
+                                style={{ 
+                                    padding: '0.25rem 2rem 0.25rem 0.5rem', 
+                                    borderRadius: '6px', 
+                                    border: 'none',
+                                    background: 'transparent',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                    maxWidth: '300px'
+                                }}
+                                value={activeAiTargetJob?.id || ''}
+                                onChange={(e) => setAiTargetJobId(parseInt(e.target.value))}
+                            >
+                                {myJobs.length === 0 && <option value="" disabled>No jobs available</option>}
+                                {myJobs.map(job => (
+                                    <option key={job.id} value={job.id}>{job.title} ({job.status})</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '1rem 0' }}>
-                        {aiTargetJob ? `Best matches for your "${aiTargetJob.title}" project` : 'Best matches for your projects'}
-                    </p>
+                    
+                    <div style={{ margin: '1.5rem 0 1rem', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', borderLeft: '4px solid var(--accent)' }}>
+                        <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>{activeAiTargetJob ? activeAiTargetJob.title : 'Loading job details...'}</h4>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0' }}>
+                            {activeAiTargetJob ? `Showing AI recommended candidates based on required skills for this job.` : 'Please wait while we prepare matches...'}
+                        </p>
+                    </div>
                     {loadingFreelancers ? (
                         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading SmartAssist Matches...</div>
                     ) : freelancers.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No freelancers available yet.</div>
+                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
+                            <div style={{ fontWeight: 500 }}>No candidates meet the minimum match threshold for this job yet.</div>
+                        </div>
                     ) : freelancers.map((profile, i) => {
                         let parsedSkills = [];
                         try { parsedSkills = profile.skills ? JSON.parse(profile.skills) : []; } catch (e) { /* ignore */ }
@@ -499,7 +538,7 @@ export default function EmployerDashboard() {
                             parsedSkills = profile.skills ? profile.skills.split(',').map(s => s.trim()) : [];
                         }
 
-                        const compatibilityScore = profile.compatibilityScore || Math.max(60, 98 - (i * 7.5)).toFixed(1);
+                        const compatibilityScore = profile.compatibilityScore !== undefined ? profile.compatibilityScore : Math.max(60, 98 - (i * 7.5)).toFixed(1);
 
                         return (
                             <div key={profile.id} style={{
@@ -508,17 +547,30 @@ export default function EmployerDashboard() {
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             }}>
                                 <div>
-                                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{profile.user?.fullName || 'Anonymous Freelancer'}</div>
-                                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+                                    <div style={{ fontWeight: 600, marginBottom: '0.25rem', fontSize: '1.1rem' }}>{profile.user?.fullName || 'Anonymous Freelancer'}</div>
+                                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                                         {parsedSkills.length > 0 ? (
                                             parsedSkills.map(s => <span key={s} className="skill-tag">{s}</span>)
                                         ) : (
                                             <span className="skill-tag" style={{ background: 'transparent', color: 'var(--text-muted)' }}>No skills listed</span>
                                         )}
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                                         ⭐ {profile.avgRating || 'New'} · ₹{profile.hourlyRate || 0}/hr
                                     </div>
+                                    
+                                    {/* ── Candidate Ranking Breakdown UI ── */}
+                                    {profile.breakdown && (
+                                        <div style={{ 
+                                            marginTop: '0.75rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border)', 
+                                            display: 'flex', gap: '1.25rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-secondary)'
+                                        }}>
+                                            <span>Match Context: <strong style={{ color: 'var(--text-primary)' }}>{profile.breakdown.skill_match}%</strong></span>
+                                            <span>Direct: <strong style={{ color: 'var(--text-primary)' }}>{profile.breakdown.direct}%</strong></span>
+                                            <span>Domain: <strong style={{ color: 'var(--text-primary)' }}>{profile.breakdown.domain}%</strong></span>
+                                            <span>Semantic context: <strong style={{ color: 'var(--text-primary)' }}>{profile.breakdown.semantic_context}%</strong></span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div style={{

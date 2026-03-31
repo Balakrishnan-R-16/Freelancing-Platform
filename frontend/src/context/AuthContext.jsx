@@ -34,7 +34,14 @@ export function AuthProvider({ children }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-            if (!res.ok) throw new Error('Invalid credentials');
+            if (!res.ok) {
+                let errorMsg = 'Invalid credentials';
+                try {
+                    const errData = await res.json();
+                    errorMsg = errData.message || errorData.error || errorMsg;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
             const data = await res.json();
             const normalized = normalizeUser(data);
             setToken(data.token);
@@ -57,7 +64,14 @@ export function AuthProvider({ children }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, fullName, role, walletAddress }),
             });
-            if (!res.ok) throw new Error('Registration failed');
+            if (!res.ok) {
+                let errorMsg = 'Registration failed';
+                try {
+                    const errData = await res.json();
+                    errorMsg = errData.message || errorData.error || errorMsg;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
             const data = await res.json();
             const normalized = normalizeUser(data);
             setToken(data.token);
@@ -72,15 +86,22 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const googleLogin = async (accessToken, role = 'FREELANCER') => {
+    const googleLogin = async (accessToken, role = 'FREELANCER', isRegister = false) => {
         setLoading(true);
         try {
             const res = await fetch(`${API}/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ accessToken, role }),
+                body: JSON.stringify({ accessToken, role, isRegister }),
             });
-            if (!res.ok) throw new Error('Google Authentication failed');
+            if (!res.ok) {
+                let errorMsg = 'Google Authentication failed';
+                try {
+                    const errData = await res.json();
+                    errorMsg = errData.message || errData.error || errorMsg;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
             const data = await res.json();
             const normalized = normalizeUser(data);
             setToken(data.token);

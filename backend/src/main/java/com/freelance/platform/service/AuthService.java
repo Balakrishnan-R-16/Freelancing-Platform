@@ -77,7 +77,7 @@ public class AuthService {
 
     public AuthResponse login(AuthRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new RuntimeException("Account not found. Please sign up."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid email or password");
@@ -124,6 +124,11 @@ public class AuthService {
         if (userOpt.isPresent()) {
             user = userOpt.get();
         } else {
+            // Do not allow login for non-existent accounts unless it's explicitly a registration request
+            if (!request.isRegister()) {
+                throw new RuntimeException("Account not found. Please sign up.");
+            }
+
             // Auto Register
             User.Role requestedRole = User.Role.FREELANCER;
             if (request.getRole() != null && request.getRole().equalsIgnoreCase("EMPLOYER")) {

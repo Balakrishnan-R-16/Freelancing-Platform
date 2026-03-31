@@ -30,7 +30,7 @@ export default function Register() {
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async tokenResponse => {
             try {
-                const data = await googleLogin(tokenResponse.access_token, form.role);
+                const data = await googleLogin(tokenResponse.access_token, form.role, true);
                 navigate(data.role === 'EMPLOYER' ? '/dashboard/employer' : '/dashboard/freelancer');
             } catch (err) {
                 setError(err.message || 'Google Signup failed');

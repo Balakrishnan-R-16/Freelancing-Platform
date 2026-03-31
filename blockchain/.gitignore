@@ -2,26 +2,42 @@
 # Blockchain — Hardhat / Solidity
 # ==========================
 
-# Dependencies
+# ── Dependencies ─────────────────────────────────
 node_modules/
 
-# Hardhat
+# ── Hardhat Artifacts & Cache ────────────────────
 cache/
 artifacts/
 
-# Coverage
+# ── Coverage ─────────────────────────────────────
 coverage/
 coverage.json
 
-# TypeChain
+# ── TypeChain ────────────────────────────────────
 typechain/
 typechain-types/
 
-# Environment
+# ── Gas Reporter ─────────────────────────────────
+gas-report.txt
+
+# ── Deployment Artifacts ─────────────────────────
+deployments/localhost/
+
+# ── Environment & Secrets ────────────────────────
 .env
+.env.local
+*.pem
+*.key
 
-# OS
+# ── OS ───────────────────────────────────────────
 .DS_Store
+Thumbs.db
 
-# Logs
+# ── Logs ─────────────────────────────────────────
 *.log
+
+# ── Editor ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*~

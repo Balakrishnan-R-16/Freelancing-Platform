@@ -2,26 +2,51 @@
 # Root .gitignore — Zyntra
 # ==========================
 
-# OS files
+# ── OS Files ─────────────────────────────────────
 .DS_Store
 Thumbs.db
+Desktop.ini
+._*
 
-# IDEs
+# ── IDEs & Editors ───────────────────────────────
 .vscode/
 .idea/
 *.iml
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
 
-# Python virtual environments
+# ── Python Virtual Environments ──────────────────
 .venv/
 venv/
+env/
 __pycache__/
+*.pyc
 
-# Docker
+# ── Node ─────────────────────────────────────────
+node_modules/
+
+# ── Docker ───────────────────────────────────────
 docker-compose.override.yml
 
-# Misc
+# ── Environment & Secrets ────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ── Logs ─────────────────────────────────────────
 *.log
 *.tmp
+
+# ── Antigravity / Gemini ─────────────────────────
+.gemini/
+
+# ── AI Models ────────────────────────────────────
+ai-service/ner_model/

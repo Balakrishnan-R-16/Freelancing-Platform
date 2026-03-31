@@ -34,32 +34,36 @@ public class FreelancerController {
     }
 
     @PutMapping("/profile")
-    @Operation(summary = "Update freelancer profile from resume data")
+    @Operation(summary = "Update freelancer profile from resume data (upsert)")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> updateProfile(
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, Object> profileData) {
 
-        FreelancerProfile profile = freelancerProfileRepository.findByUserId(user.getId())
-                .orElse(null);
+        com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
 
-        if (profile == null) {
-            return ResponseEntity.notFound().build();
-        }
+        // ── UPSERT: create profile row if it doesn't exist yet ──────────
+        FreelancerProfile profile = freelancerProfileRepository
+                .findByUserId(user.getId())
+                .orElseGet(() -> {
+                    FreelancerProfile p = new FreelancerProfile();
+                    p.setUser(user);
+                    return p;
+                });
 
         // Update fields from resume parsing
-        if (profileData.containsKey("title")) {
+        if (profileData.containsKey("title") && profileData.get("title") != null) {
             profile.setTitle((String) profileData.get("title"));
         }
-        if (profileData.containsKey("bio")) {
+        if (profileData.containsKey("bio") && profileData.get("bio") != null) {
             profile.setBio((String) profileData.get("bio"));
         }
-        if (profileData.containsKey("skills")) {
-            // skills comes as a List from JSON, convert to JSON string for DB
+        if (profileData.containsKey("skills") && profileData.get("skills") != null) {
             Object skills = profileData.get("skills");
             if (skills instanceof List) {
                 try {
-                    profile.setSkills(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(skills));
+                    profile.setSkills(mapper.writeValueAsString(skills));
                 } catch (Exception e) {
                     profile.setSkills("[]");
                 }
@@ -67,7 +71,10 @@ public class FreelancerController {
                 profile.setSkills((String) skills);
             }
         }
-        if (profileData.containsKey("hourlyRate")) {
+        if (profileData.containsKey("resume_text") && profileData.get("resume_text") != null) {
+            profile.setResumeText((String) profileData.get("resume_text"));
+        }
+        if (profileData.containsKey("hourlyRate") && profileData.get("hourlyRate") != null) {
             Object rate = profileData.get("hourlyRate");
             if (rate instanceof Number) {
                 profile.setHourlyRate(java.math.BigDecimal.valueOf(((Number) rate).doubleValue()));

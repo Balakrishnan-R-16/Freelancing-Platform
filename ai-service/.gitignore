@@ -2,28 +2,63 @@
 # AI Service — Python / FastAPI
 # ==========================
 
-# Virtual environments
+# ── Virtual Environments ─────────────────────────
 .venv/
 venv/
 env/
+ENV/
 
-# Python
+# ── Python Bytecode ──────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 *.pyo
 *.pyd
 .Python
 
-# Distribution
+# ── Distribution / Packaging ────────────────────
 dist/
 build/
 *.egg-info/
+*.egg
+*.whl
+.eggs/
 
-# Environment
+# ── Pytest / Testing ─────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ── Jupyter Notebooks ────────────────────────────
+.ipynb_checkpoints/
+
+# ── Trained ML Models (large binary files) ───────
+ner_model/
+
+# ── Datasets (large; tracked via Git LFS or DVC) ─
+# Uncomment these if datasets are tracked separately:
+# dataset.json
+# dataset_augmented.json
+
+# ── mypy / type-checking ─────────────────────────
+.mypy_cache/
+.dmypy.json
+
+# ── Environment ──────────────────────────────────
 .env
+.env.local
 
-# OS
+# ── OS ───────────────────────────────────────────
 .DS_Store
+Thumbs.db
 
-# Logs
+# ── Logs ─────────────────────────────────────────
 *.log
+
+# ── Editor ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*~

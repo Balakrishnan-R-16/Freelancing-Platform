@@ -7,7 +7,6 @@ export default function Jobs() {
     const { user, token } = useAuth();
     const { lastEvent } = useRealtime();
     const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState('ALL');
     const [budgetFilter, setBudgetFilter] = useState('ALL');
     const [durationFilter, setDurationFilter] = useState('ALL');
     const [selectedJob, setSelectedJob] = useState(null);
@@ -76,7 +75,6 @@ export default function Jobs() {
     const filtered = jobs.filter(j => {
         const matchSearch = j.title.toLowerCase().includes(search.toLowerCase()) ||
             j.skills.some(s => s.toLowerCase().includes(search.toLowerCase()));
-        const matchStatus = filter === 'ALL' || j.status === filter;
 
         // Budget match
         let matchBudget = true;
@@ -90,7 +88,7 @@ export default function Jobs() {
         else if (durationFilter === 'MEDIUM') matchDuration = j.duration >= 14 && j.duration <= 30;
         else if (durationFilter === 'LONG') matchDuration = j.duration > 30;
 
-        return matchSearch && matchStatus && matchBudget && matchDuration;
+        return matchSearch && matchBudget && matchDuration;
     });
 
     return (
@@ -141,16 +139,6 @@ export default function Jobs() {
                     <option value="MEDIUM">14 - 30 Days</option>
                     <option value="LONG">&gt; 30 Days</option>
                 </select>
-
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                    {['ALL', 'OPEN', 'IN_PROGRESS'].map(f => (
-                        <button key={f} className={`btn ${filter === f ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}`}
-                            style={{ padding: '0.5rem 1rem' }}
-                            onClick={() => setFilter(f)}>
-                            {f === 'ALL' ? 'All' : f === 'OPEN' ? <><CheckCircle2 size={14} /> Open</> : <><PlayCircle size={14} /> In Progress</>}
-                        </button>
-                    ))}
-                </div>
             </div>
 
             {/* Loading and Error States */}

@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class GoogleAuthRequest {
     private String accessToken;
     private String role; // Optional: Only used during first-time signup via Google
+    private boolean isRegister;
 }

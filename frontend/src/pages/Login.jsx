@@ -18,6 +18,10 @@ export default function Login() {
             const data = await login(email, password);
             navigate(data.role === 'EMPLOYER' ? '/dashboard/employer' : '/dashboard/freelancer');
         } catch (err) {
+            if (err.message && err.message.includes('Account not found')) {
+                navigate('/register');
+                return;
+            }
             setError(err.message || 'Login failed');
             setTimeout(() => setError(''), 5000);
         }
@@ -26,9 +30,13 @@ export default function Login() {
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async tokenResponse => {
             try {
-                const data = await googleLogin(tokenResponse.access_token);
+                const data = await googleLogin(tokenResponse.access_token, undefined, false);
                 navigate(data.role === 'EMPLOYER' ? '/dashboard/employer' : '/dashboard/freelancer');
             } catch (err) {
+                if (err.message && err.message.includes('Account not found')) {
+                    navigate('/register');
+                    return;
+                }
                 setError(err.message || 'Google Login failed');
                 setTimeout(() => setError(''), 5000);
             }
