@@ -1,33 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
   <defs>
-    <!-- Drop shadow for depth -->
-    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    <!-- Soft glow -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
-
-    <!-- gradientUnits="userSpaceOnUse" is REQUIRED for gradients on perfectly horizontal/vertical lines, otherwise they disappear! -->
-    <linearGradient id="gradTop" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#00A8FF" />
-      <stop offset="100%" stop-color="#3B82F6" />
-    </linearGradient>
-
-    <linearGradient id="gradDiag" x1="100" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#3B82F6" />
-      <stop offset="100%" stop-color="#7C3AED" />
-    </linearGradient>
-
-    <linearGradient id="gradBot" x1="0" y1="100" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#7C3AED" />
-      <stop offset="100%" stop-color="#9333EA" />
-    </linearGradient>
+    <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#3B82F6" flood-opacity="0.4"/>
+    </filter>
   </defs>
 
-  <!-- Bottom Bar (Back Layer) -->
-  <line x1="25" y1="75" x2="75" y2="75" stroke="url(#gradBot)" stroke-width="24" stroke-linecap="round" />
+  <!-- 3D Extrusion (Back Shadow/Side) -->
+  <!-- Translate by dx=3, dy=5 -->
+  <path d="M 19,21 L 87,21 L 87,39 L 45,71 L 87,71 L 87,89 L 19,89 L 19,71 L 61,39 L 19,39 Z" fill="#09090b" />
+  
+  <!-- Connectors for 3D faces -->
+  <!-- Top edge -->
+  <polygon points="16,16 84,16 87,21 19,21" fill="#1f1f22" />
+  <!-- Right edge top bar -->
+  <polygon points="84,16 87,21 87,39 84,34" fill="#000000" />
+  <!-- Inner right edge -->
+  <polygon points="84,34 87,39 45,71 42,66" fill="#1f1f22" />
+  <!-- Top edge bottom bar -->
+  <polygon points="42,66 45,71 87,71 84,66" fill="#1f1f22" />
+  <!-- Right edge bottom bar -->
+  <polygon points="84,66 87,71 87,89 84,84" fill="#000000" />
+  <!-- Bottom edge bottom bar -->
+  <polygon points="16,84 84,84 87,89 19,89" fill="#09090b" />
+  <!-- Left edge bottom bar -->
+  <polygon points="16,66 19,71 19,89 16,84" fill="#1f1f22" />
 
-  <!-- Diagonal Bar (Middle Layer) -->
-  <line x1="75" y1="25" x2="25" y2="75" stroke="url(#gradDiag)" stroke-width="24" stroke-linecap="round" filter="url(#shadow)" />
-
-  <!-- Top Bar (Front Layer) -->
-  <line x1="25" y1="25" x2="75" y2="25" stroke="url(#gradTop)" stroke-width="24" stroke-linecap="round" filter="url(#shadow)" />
+  <!-- Main Front Face -->
+  <path d="M 16,16 L 84,16 L 84,34 L 42,66 L 84,66 L 84,84 L 16,84 L 16,66 L 58,34 L 16,34 Z" fill="#27272a" stroke="#3B82F6" stroke-width="0.5" filter="url(#glowBlue)" />
 </svg>

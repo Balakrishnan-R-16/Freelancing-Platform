@@ -1,98 +1,109 @@
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { LogOut, User as UserIcon, Briefcase, LayoutDashboard, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const NAV_LINKS = [
+    { path: '/jobs',        label: 'Explore Jobs',  icon: Briefcase,       roles: null },
+    { path: '/dashboard',   label: 'Dashboard',     icon: LayoutDashboard, roles: ['FREELANCER', 'EMPLOYER'] },
+    { path: '/escrow',  label: 'Smart Escrow',  icon: Shield,          roles: null },
+];
 
 export default function Navbar() {
     const { user, logout } = useAuth();
-    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
+    const [avatarHovered, setAvatarHovered] = useState(false);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/');
-    };
+    const handleLogout = () => { logout(); navigate('/'); };
+
+    const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
+
+    const visibleLinks = NAV_LINKS.filter(l => {
+        if (!l.roles) return true;
+        return user && l.roles.includes(user.role);
+    });
+
+    const getDashPath = () => user?.role === 'FREELANCER' ? '/dashboard/freelancer' : '/dashboard/employer';
 
     return (
-        <nav className="navbar">
-            <div className="navbar-container">
-                {/* Left Section */}
-                <Link to="/" className="navbar-brand">
-                    <svg width="42" height="42" viewBox="0 0 64 60" xmlns="http://www.w3.org/2000/svg" className="brand-logo" style={{ marginRight: '8px' }}>
-                        <defs>
-                            <linearGradient id="face-top" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#2d2d2d" />
-                                <stop offset="100%" stopColor="#111111" />
-                            </linearGradient>
-                            <linearGradient id="face-side" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stopColor="#4a4a4a" />
-                                <stop offset="100%" stopColor="#666666" />
-                            </linearGradient>
-                            <filter id="z3d-shadow" x="-10%" y="-10%" width="130%" height="140%">
-                                <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.22" />
-                            </filter>
-                        </defs>
-                        <g filter="url(#z3d-shadow)">
-                            {/* === TOP BAR === */}
-                            {/* Top face – highlight */}
-                            <polygon points="2,3 50,3 55,9 7,9" fill="url(#face-top)" />
-                            {/* Front face */}
-                            <polygon points="7,9 55,9 55,18 7,18" fill="#111111" />
-                            {/* Right side extrusion */}
-                            <polygon points="50,3 55,9 55,18 50,12" fill="url(#face-side)" />
-
-                            {/* === DIAGONAL SLASH === */}
-                            {/* Top face (thin highlight strip) */}
-                            <polygon points="55,9 18,42 12,42 49,9" fill="#1e1e1e" />
-                            {/* Main front face */}
-                            <polygon points="55,18 18,51 12,51 10,42 18,42 49,18" fill="#111111" />
-                            {/* Right depth strip */}
-                            <polygon points="55,9 55,18 49,18 49,9" fill="url(#face-side)" />
-
-                            {/* === BOTTOM BAR === */}
-                            {/* Top face – highlight */}
-                            <polygon points="9,42 57,42 62,48 14,48" fill="url(#face-top)" />
-                            {/* Front face */}
-                            <polygon points="14,48 62,48 62,57 14,57" fill="#111111" />
-                            {/* Right side extrusion */}
-                            <polygon points="57,42 62,48 62,57 57,51" fill="url(#face-side)" />
-                        </g>
-                    </svg>
-                    <span>Zyntra</span>
+        <nav className="sticky top-0 z-50 w-full bg-[#525252] shadow-md border-b border-white/5">
+            <div className="container mx-auto px-6 h-16 flex items-center justify-between relative">
+                
+                {/* Left: Logo */}
+                <Link to="/" className="flex items-center gap-2 group z-10">
+                    <motion.img
+                        src="/logo.svg"
+                        alt="Zyntra"
+                        className="w-8 h-8"
+                        whileHover={{ scale: 1.05 }}
+                    />
+                    <span className="text-xl font-bold tracking-tight text-white">
+                        Zyntra
+                    </span>
                 </Link>
 
-                {/* Center Section */}
-                <ul className="navbar-links">
-                    <li><Link to="/jobs" className={location.pathname === '/jobs' ? 'active' : ''}>Explore Jobs</Link></li>
-                    {user && (
-                        <li><Link to={user.role === 'FREELANCER' ? '/dashboard/freelancer' : '/dashboard/employer'} className={location.pathname.includes('/dashboard') ? 'active' : ''}>Dashboard</Link></li>
-                    )}
-                    <li><Link to="/blockchain" className={location.pathname === '/blockchain' ? 'active' : ''}>Smart Escrow</Link></li>
+                {/* Center: Nav Links */}
+                <ul className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2 z-0">
+                    {visibleLinks.map((link) => {
+                        const to = link.path === '/dashboard' ? getDashPath() : link.path;
+                        const active = isActive(link.path);
+                        return (
+                            <li key={link.path}>
+                                <Link to={to} className={`flex items-center gap-2 text-sm font-semibold transition-colors ${active ? 'text-white drop-shadow-md' : 'text-white/70 hover:text-white'}`}>
+                                    <link.icon size={16} strokeWidth={active ? 2.5 : 2} />
+                                    <span>{link.label}</span>
+                                </Link>
+                            </li>
+                        );
+                    })}
                 </ul>
 
-                {/* Right Section */}
-                <div className="navbar-actions">
-                    <button className="theme-toggle" onClick={toggleTheme} id="theme-toggle-btn"
-                        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                        {theme === 'dark' ? '☀️' : '🌙'}
-                    </button>
-
+                {/* Right: Actions */}
+                <div className="flex items-center gap-4 z-10">
                     {user ? (
-                        <>
-                            <div className="user-avatar">
-                                {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
-                            </div>
-                            <span className="user-name">
-                                {user.fullName ? user.fullName : 'Profile'}
-                            </span>
-                            <button className="logout-btn" onClick={handleLogout}>
-                                Logout
+                        <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <motion.div
+                                className="relative hidden sm:flex items-center gap-2.5 pl-4 border-l border-white/10 cursor-pointer"
+                                onHoverStart={() => setAvatarHovered(true)}
+                                onHoverEnd={() => setAvatarHovered(false)}
+                            >
+                                <div className="relative">
+                                    <motion.div
+                                        className="absolute inset-0 rounded-full border-2 border-[#3B82F6]"
+                                        animate={avatarHovered
+                                            ? { scale: 1.25, opacity: 0 }
+                                            : { scale: 1.1, opacity: 0.5 }
+                                        }
+                                        transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                                    />
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1E1E1E] to-black border border-white/20 flex items-center justify-center text-white font-bold text-sm shadow-sm relative z-10">
+                                        {user.fullName ? user.fullName.charAt(0).toUpperCase() : <UserIcon size={14} />}
+                                    </div>
+                                </div>
+                                <span className="text-sm font-medium text-white/80 max-w-[100px] truncate">
+                                    {user.fullName || 'User'}
+                                </span>
+                            </motion.div>
+
+                            <button
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white/60 hover:text-white/90 rounded-md hover:bg-white/[0.05] transition-colors"
+                                onClick={handleLogout}
+                            >
+                                <span className="hidden sm:inline">Logout</span>
+                                <LogOut size={16} />
                             </button>
-                        </>
+                        </div>
                     ) : (
-                        <div className="auth-buttons" style={{ display: 'flex', gap: '8px' }}>
-                            <Link to="/login" className="btn btn-ghost btn-sm" style={{ padding: '8px 14px' }}>Login</Link>
-                            <Link to="/register" className="btn btn-primary btn-sm" style={{ padding: '8px 14px' }}>Get Started</Link>
+                        <div className="flex items-center gap-5 pl-5 border-l border-white/20">
+                            <Link
+                                to="/login"
+                                className="px-5 py-2 text-sm font-bold text-black bg-white hover:bg-neutral-100 rounded-md shadow-sm transition-all"
+                            >
+                                Login / Register
+                            </Link>
                         </div>
                     )}
                 </div>

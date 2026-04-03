@@ -31,9 +31,6 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Column(name = "wallet_address")
-    private String walletAddress;
-
     @Column(name = "avatar_url")
     private String avatarUrl;
 
@@ -55,6 +52,6 @@ public class User {
     }
 
     public enum Role {
-        FREELANCER, EMPLOYER
+        FREELANCER, EMPLOYER, ADMIN
     }
 }

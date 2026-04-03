@@ -47,8 +47,22 @@ public class BidService {
             throw new RuntimeException("Job is not open for bidding");
         }
 
-        if (bidRepository.existsByJobIdAndFreelancerId(job.getId(), freelancer.getId())) {
-            throw new RuntimeException("You have already bid on this job");
+        // Check for an existing bid by this freelancer on this job
+        java.util.Optional<Bid> existing = bidRepository.findByJobIdAndFreelancerId(job.getId(), freelancer.getId());
+        if (existing.isPresent()) {
+            Bid prev = existing.get();
+            if (prev.getStatus() == Bid.BidStatus.PENDING) {
+                // Freelancer already has an active pending bid — block duplicate
+                throw new RuntimeException("You already have a pending bid on this job. Withdraw it first if you'd like to revise.");
+            }
+            // Bid was REJECTED (job was reopened after dispute/cancellation) — allow re-bid by updating the record
+            prev.setAmount(request.getAmount());
+            prev.setProposal(request.getProposal());
+            prev.setDeliveryDays(request.getDeliveryDays());
+            prev.setStatus(Bid.BidStatus.PENDING);
+            Bid updated = bidRepository.save(prev);
+            sseService.dispatchEvent("bid", "created", updated);
+            return updated;
         }
 
         Bid bid = Bid.builder()

@@ -48,7 +48,6 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .role(User.Role.valueOf(request.getRole()))
-                .walletAddress(request.getWalletAddress())
                 .build();
 
         user = userRepository.save(user);

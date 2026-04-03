@@ -8,5 +8,4 @@ public class RegisterRequest {
     private String password;
     private String fullName;
     private String role; // FREELANCER or EMPLOYER
-    private String walletAddress;
 }

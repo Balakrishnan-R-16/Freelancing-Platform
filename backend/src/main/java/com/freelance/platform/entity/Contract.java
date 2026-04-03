@@ -19,6 +19,9 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Integer version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
@@ -34,11 +37,14 @@ public class Contract {
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User employer;
 
-    @Column(name = "contract_address")
-    private String contractAddress;
-
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
+
+    @Column(name = "submission_note", columnDefinition = "TEXT")
+    private String submissionNote;
+
+    @Column(name = "submission_link", length = 1000)
+    private String submissionLink;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -69,6 +75,6 @@ public class Contract {
     }
 
     public enum ContractStatus {
-        CREATED, FUNDED, WORK_SUBMITTED, APPROVED, COMPLETED, REFUNDED, DISPUTED
+        CREATED, FUNDED, WORK_SUBMITTED, APPROVED, COMPLETED, REFUNDED, DISPUTED, CANCELLED, FAILED
     }
 }

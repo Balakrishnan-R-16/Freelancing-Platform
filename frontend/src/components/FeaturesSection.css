@@ -1,207 +1,40 @@
 /* =========================================================================
    FeaturesSection.css
-   Premium, Black & White, Glassmorphism styles for Zyntra Features
+   Refactored for Tailwind compliance + Custom Keyframes
    ========================================================================= */
 
-.features-v2-container {
-    --bg-color: #030303;
-    --card-bg: rgba(20, 20, 20, 0.4);
-    --card-border: rgba(255, 255, 255, 0.05);
-    --card-glow: rgba(255, 255, 255, 0.1);
-    --text-primary: #ffffff;
-    --text-secondary: #999999;
-    --accent-glow: #ffffff;
-    
-    position: relative;
-    padding: 6rem 2rem;
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    overflow: hidden;
-    font-family: 'Inter', sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Background Effects */
-.features-v2-container::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at center, rgba(30, 30, 30, 0.5) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 1;
+/* Feature Badge */
+.features-v2-count-badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.22);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
 }
 
 .features-v2-bg-noise {
     position: absolute;
     inset: 0;
-    opacity: 0.03;
+    opacity: 0.02;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 2;
 }
 
-/* Header */
-.features-v2-header {
-    text-align: center;
-    max-width: 800px;
-    margin-bottom: 4rem;
-    z-index: 10;
-    position: relative;
-}
-
-.features-v2-title {
-    font-size: 3rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 1rem;
-    background: linear-gradient(180deg, #FFFFFF 0%, #888888 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.features-v2-subtitle {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
-    font-weight: 400;
-}
-
-/* Grid */
-.features-v2-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    max-width: 1200px;
-    width: 100%;
-    z-index: 10;
-    position: relative;
-}
-
-@media (max-width: 1024px) {
-    .features-v2-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .features-v2-grid {
-        grid-template-columns: 1fr;
-    }
-    .features-v2-title {
-        font-size: 2.25rem;
-    }
-}
-
-/* Card */
-.features-v2-card {
-    position: relative;
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 24px;
-    padding: 2.5rem 2rem;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.4s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
-/* Hover & Magnetic Glow applied dynamically in JS, but fallback here */
-.features-v2-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
-                0 0 20px rgba(255, 255, 255, 0.03) inset;
-}
-
-/* Card Glow Effect (Mouse Follow) */
-.features-v2-card-glow {
+/* Local Cursor Glow */
+.cursor-glow {
     position: absolute;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, var(--card-glow) 0%, transparent 70%);
+    top: 0;
+    left: 0;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.06) 0%, transparent 60%);
     border-radius: 50%;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 0;
+    z-index: 1;
     transform: translate(-50%, -50%);
-}
-
-.features-v2-card:hover .features-v2-card-glow {
-    opacity: 1;
-}
-
-/* Card Content */
-.features-v2-card-content {
-    position: relative;
-    z-index: 10;
-}
-
-.features-v2-icon-wrapper {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    color: #ffffff;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.features-v2-card:hover .features-v2-icon-wrapper {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 0 30px rgba(255, 255, 255, 0.05) inset;
-    transform: scale(1.05);
-}
-
-.features-v2-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.01em;
-}
-
-.features-v2-card-desc {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 0;
-    transition: opacity 0.3s ease;
-}
-
-/* Expanded State Details */
-.features-v2-expanded-content {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition: grid-template-rows 0.4s ease, opacity 0.4s ease;
-}
-
-.features-v2-card.expanded .features-v2-expanded-content {
-    grid-template-rows: 1fr;
-    opacity: 1;
-}
-
-.features-v2-expanded-inner {
-    overflow: hidden;
+    transition: width 0.3s, height 0.3s;
+    mix-blend-mode: multiply;
 }
 
 /* Progress / Loading Indicator inside expanded card */
@@ -221,105 +54,10 @@
     left: 0;
     height: 100%;
     width: 0%;
-    background: #ffffff;
-    box-shadow: 0 0 10px #ffffff;
-    animation: loadBar 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    background: #3B82F6;
+    box-shadow: 0 0 10px #3B82F6;
+    animation: loadBar 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
-.features-v2-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding: 0.75rem 1.25rem;
-    background: #ffffff;
-    color: #000000;
-    font-weight: 600;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.features-v2-action-btn:hover {
-    box-shadow: 0 0 15px rgba(255,255,255,0.4);
-    transform: translateY(-2px);
-}
-
-.features-v2-action-btn.loading {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #ffffff;
-    box-shadow: none;
-    cursor: default;
-    pointer-events: none;
-}
-
-/* Global Cursor Glow */
-.cursor-glow {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: width 0.3s, height 0.3s;
-    mix-blend-mode: screen;
-}
-
-/* ICON ANIMATIONS */
-
-/* 1. AI Pulse */
-@keyframes aiPulse {
-    0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); transform: scale(1); }
-    50% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); transform: scale(1.1); }
-    100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); transform: scale(1); }
-}
-.features-v2-card:hover .icon-ai { animation: aiPulse 2s infinite ease-in-out; }
-
-/* 2. Blockchain Link */
-@keyframes chainLink {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(180deg); }
-}
-.features-v2-card:hover .icon-blockchain { animation: chainLink 4s infinite linear; }
-
-/* 3. Graph Grow */
-@keyframes graphGrow {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-3px) scaleY(1.1); }
-    100% { transform: translateY(0); }
-}
-.features-v2-card:hover .icon-graph { animation: graphGrow 1.5s infinite ease-in-out; }
-
-/* 4. Star Shimmer */
-@keyframes starShimmer {
-    0% { transform: rotate(0deg) scale(1); opacity: 0.8; }
-    50% { transform: rotate(15deg) scale(1.15); opacity: 1; filter: drop-shadow(0 0 5px white); }
-    100% { transform: rotate(0deg) scale(1); opacity: 0.8; }
-}
-.features-v2-card:hover .icon-star { animation: starShimmer 2s infinite ease; }
-
-/* 5. Analytics Motion */
-@keyframes dashMotion {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05) translateX(2px); }
-    100% { transform: scale(1); }
-}
-.features-v2-card:hover .icon-analytics { animation: dashMotion 2s infinite ease-in-out; }
-
-/* 6. Lock Close */
-@keyframes lockPulse {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(2px); filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)); }
-    100% { transform: translateY(0); }
-}
-.features-v2-card:hover .icon-lock { animation: lockPulse 1.5s infinite ease-in-out; }
 
 /* Loading Bar Animation */
 @keyframes loadBar {
@@ -327,3 +65,58 @@
     50% { width: 60%; }
     100% { width: 100%; }
 }
+
+/* Icon Tokens and Keyframes */
+.icon-ai { color: #3B82F6; }
+.icon-blockchain { color: #D4AF37; }
+.icon-graph { color: #3B82F6; }
+.icon-star { color: #D4AF37; }
+.icon-analytics { color: #3B82F6; }
+.icon-lock { color: #D4AF37; }
+
+/* 1. AI Pulse */
+@keyframes aiPulse {
+    0% { filter: drop-shadow(0 0 2px rgba(59,130,246,0.2)); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 8px rgba(59,130,246,0.8)); transform: scale(1.1); }
+    100% { filter: drop-shadow(0 0 2px rgba(59,130,246,0.2)); transform: scale(1); }
+}
+.group:hover .icon-ai { animation: aiPulse 2s infinite ease-in-out; }
+
+/* 2. Blockchain Link */
+@keyframes chainLink {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(180deg); }
+}
+.group:hover .icon-blockchain { animation: chainLink 4s infinite linear; }
+
+/* 3. Graph Grow */
+@keyframes graphGrow {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-3px) scaleY(1.1); }
+    100% { transform: translateY(0); }
+}
+.group:hover .icon-graph { animation: graphGrow 1.5s infinite ease-in-out; }
+
+/* 4. Star Shimmer */
+@keyframes starShimmer {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(15deg) scale(1.15); filter: drop-shadow(0 0 5px #D4AF37); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+.group:hover .icon-star { animation: starShimmer 2s infinite ease; }
+
+/* 5. Analytics Motion */
+@keyframes dashMotion {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05) translateX(2px); }
+    100% { transform: scale(1); }
+}
+.group:hover .icon-analytics { animation: dashMotion 2s infinite ease-in-out; }
+
+/* 6. Lock Close */
+@keyframes lockPulse {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(2px); filter: drop-shadow(0 0 6px rgba(212,175,55,0.6)); }
+    100% { transform: translateY(0); }
+}
+.group:hover .icon-lock { animation: lockPulse 1.5s infinite ease-in-out; }

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ── MySQL Database ──────────────────────────────
   mysql:
@@ -25,11 +23,15 @@ services:
     container_name: freelance-backend
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/freelance_platform?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       APP_AI_SERVICE_URL: http://ai-service:8000
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-rzp_test_SZ1bf4kK6cibdx}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-JZMVgw7xBU9p4hsuO5OCUMd8}
     depends_on:
       mysql:
         condition: service_healthy

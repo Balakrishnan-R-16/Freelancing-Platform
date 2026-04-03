@@ -8,4 +8,5 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     List<Contract> findByEmployerId(Long employerId);
     List<Contract> findByFreelancerId(Long freelancerId);
     long countByStatus(Contract.ContractStatus status);
+    List<Contract> findByStatus(Contract.ContractStatus status);
 }

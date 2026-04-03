@@ -1,26 +1,14 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+// ThemeContext — stripped. Single fixed dark theme. No switching.
+import React, { createContext, useContext } from 'react';
 
-const ThemeContext = createContext(null);
+const ThemeContext = createContext({ theme: 'dark' });
 
-export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => {
-        return localStorage.getItem('theme') || 'dark';
-    });
+// Pass-through provider — keeps App.jsx import working without changes
+export const ThemeProvider = ({ children }) => (
+    <ThemeContext.Provider value={{ theme: 'dark' }}>
+        {children}
+    </ThemeContext.Provider>
+);
 
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-    };
-
-    return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
-}
-
+// No-op hook — kept so any consumer doesn't crash
 export const useTheme = () => useContext(ThemeContext);

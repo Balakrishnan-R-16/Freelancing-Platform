@@ -14,8 +14,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
-    role ENUM('FREELANCER', 'EMPLOYER') NOT NULL,
-    wallet_address VARCHAR(42),
+    role ENUM('FREELANCER', 'EMPLOYER', 'ADMIN') NOT NULL,
     avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -89,7 +88,6 @@ CREATE TABLE contracts (
     job_id BIGINT NOT NULL,
     freelancer_id BIGINT NOT NULL,
     employer_id BIGINT NOT NULL,
-    contract_address VARCHAR(42),
     amount DECIMAL(15, 2) NOT NULL,
     status ENUM('CREATED', 'FUNDED', 'WORK_SUBMITTED', 'APPROVED', 'COMPLETED', 'REFUNDED', 'DISPUTED') DEFAULT 'CREATED',
     funded_at TIMESTAMP NULL,
@@ -126,7 +124,6 @@ CREATE TABLE reviews (
 CREATE TABLE payments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     contract_id BIGINT NOT NULL,
-    tx_hash VARCHAR(66),
     amount DECIMAL(15, 2) NOT NULL,
     payment_type ENUM('DEPOSIT', 'RELEASE', 'REFUND') NOT NULL,
     status ENUM('PENDING', 'CONFIRMED', 'FAILED') DEFAULT 'PENDING',
@@ -140,11 +137,11 @@ CREATE TABLE payments (
 -- ================================================
 
 -- Passwords are bcrypt hash of 'password123'
-INSERT INTO users (email, password_hash, full_name, role, wallet_address) VALUES
-('alice@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Alice Johnson', 'FREELANCER', '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD38'),
-('bob@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Bob Smith', 'EMPLOYER', '0x53d284357ec70ce289d6d64134dfac8e511c8a3d'),
-('carol@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Carol Williams', 'FREELANCER', '0xab5801a7d398351b8be11c439e05c5b3259aec9b'),
-('dave@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Dave Brown', 'EMPLOYER', '0x2b6ed29a95753c3ad948348e3e7b1a251080ffb9');
+INSERT INTO users (email, password_hash, full_name, role) VALUES
+('alice@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Alice Johnson', 'FREELANCER'),
+('bob@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Bob Smith', 'EMPLOYER'),
+('carol@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Carol Williams', 'FREELANCER'),
+('dave@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Dave Brown', 'EMPLOYER');
 
 INSERT INTO freelancer_profiles (user_id, title, bio, skills, hourly_rate, avg_rating, jobs_completed) VALUES
 (1, 'Full-Stack Developer', 'Experienced developer specializing in React, Node.js, and blockchain development.', '["React", "Node.js", "Solidity", "Python", "TypeScript"]', 85.00, 4.80, 47),
