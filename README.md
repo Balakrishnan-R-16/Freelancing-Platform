@@ -1,6 +1,6 @@
-# AI-Powered Freelancing Platform with Blockchain Smart Contracts
+# Zyntra - AI-Powered Freelancing Platform
 
-A production-ready full-stack web application combining **React**, **Spring Boot**, **Python AI**, and **Ethereum Smart Contracts** for a decentralized freelancing marketplace.
+A production-ready full-stack web application combining **React**, **Spring Boot**, and **Python AI** for a modern real-time freelancing marketplace.
 
 ---
 
@@ -9,7 +9,7 @@ A production-ready full-stack web application combining **React**, **Spring Boot
 ```
 ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
 │   React Frontend │──▶│  Spring Boot API  │──▶│   MySQL Database │
-│   (Vite + React) │   │  (REST + JWT)     │   │   (8 tables)     │
+│   (Vite + React) │   │  (REST + JWT)     │   │   (Tables)       │
 └───────┬──────────┘   └───────┬──────────┘   └──────────────────┘
         │                      │
         │                      ▼
@@ -19,20 +19,18 @@ A production-ready full-stack web application combining **React**, **Spring Boot
         │              └──────────────────┘
         ▼
 ┌──────────────────┐
-│ Ethereum Network │
-│ (Escrow Contract)│
+│  Server-Sent     │
+│  Events (SSE)    │
 └──────────────────┘
 ```
 
 ## 📁 Project Structure
 
 ```
-├── frontend/          # React (Vite) — Modern UI with dark/light mode
-├── backend/           # Spring Boot — REST APIs with JWT auth
+├── frontend/          # React (Vite) — Modern UI with sleek grey-scale design
+├── backend/           # Spring Boot — REST APIs with JWT auth and Smart Escrow
 ├── ai-service/        # Python FastAPI — ML-powered recommendations
-├── blockchain/        # Solidity — Escrow smart contracts + tests
 ├── sql/               # MySQL schema + sample data
-├── docker-compose.yml # Multi-container orchestration
 └── README.md
 ```
 
@@ -42,8 +40,8 @@ A production-ready full-stack web application combining **React**, **Spring Boot
 - **User Authentication** — JWT-based login/register for Freelancers & Employers
 - **Job Marketplace** — Post, search, filter, and bid on projects
 - **Bidding System** — Freelancers submit proposals, employers accept/reject
-- **Ratings & Reviews** — Post-contract reviews with auto-computed averages
-- **Portfolio Profiles** — Skills, bio, hourly rate, portfolio links
+- **Smart Escrow System** — Secure, backend-driven payment lifecycle management
+- **Real-Time Dashboards** — Server-Sent Events (SSE) automatically sync job statuses without manual refreshes
 
 ### AI Modules
 - **Job Recommendations** — TF-IDF cosine similarity + skill overlap scoring
@@ -51,16 +49,10 @@ A production-ready full-stack web application combining **React**, **Spring Boot
 - **Freelancer Matching** — Multi-factor compatibility (skills, rate, experience, content)
 - **Analytics Dashboard** — Market demand, supply gaps, budget analysis
 
-### Blockchain
-- **Escrow Smart Contract** — Solidity contract with state machine pattern
-- **Flow**: `deposit()` → `submitWork()` → `approveWork()` → `releasePayment()`
-- **Safety**: `refund()` available before approval
-
 ### UI
-- 🌙 Dark/light mode toggle
-- 🎨 Glassmorphism, gradients, micro-animations
-- 📱 Fully responsive design
-- ⚡ Premium Inter font, smooth transitions
+- 🎨 Sleek, premium grey-scale design aesthetic
+- 📱 Fully responsive web application
+- ⚡ Real-time status updates and smooth animations
 
 ---
 
@@ -71,7 +63,6 @@ A production-ready full-stack web application combining **React**, **Spring Boot
 - Java 17+
 - Python 3.10+
 - MySQL 8.0+
-- MetaMask (for blockchain features)
 
 ### 1. Database Setup
 ```bash
@@ -83,7 +74,6 @@ mysql -u root -p < sql/schema.sql
 cd backend
 ./mvnw spring-boot:run
 # API available at http://localhost:8080
-# Swagger UI at http://localhost:8080/swagger-ui.html
 ```
 
 ### 3. AI Service (Python)
@@ -100,23 +90,6 @@ cd frontend
 npm install
 npm run dev
 # App at http://localhost:5173
-```
-
-### 5. Blockchain (Hardhat)
-```bash
-cd blockchain
-npm install
-npx hardhat test          # Run tests
-npx hardhat node          # Start local node
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-### Docker (All-in-One)
-```bash
-docker-compose up --build
-# Frontend: http://localhost:5173
-# Backend:  http://localhost:8080
-# AI:       http://localhost:8000
 ```
 
 ---
@@ -140,30 +113,9 @@ docker-compose up --build
 | POST   | /api/auth/register | Register new user  |
 | POST   | /api/auth/login    | Login + get JWT    |
 
-### Jobs
+### Dashboard & Analytics
 | Method | Endpoint                      | Description          |
 |--------|------------------------------|----------------------|
-| GET    | /api/jobs                     | List open jobs       |
-| GET    | /api/jobs/{id}                | Get job by ID        |
-| POST   | /api/jobs                     | Create job (Employer)|
-| DELETE | /api/jobs/{id}                | Delete job           |
-
-### Bids
-| Method | Endpoint                  | Description           |
-|--------|--------------------------|------------------------|
-| POST   | /api/bids                 | Place a bid           |
-| PUT    | /api/bids/{id}/accept     | Accept bid (Employer) |
-| PUT    | /api/bids/{id}/reject     | Reject bid (Employer) |
-
-### Reviews
-| Method | Endpoint                  | Description           |
-|--------|--------------------------|------------------------|
-| GET    | /api/reviews/user/{id}    | Get user reviews      |
-| POST   | /api/reviews              | Create review         |
-
-### Dashboard
-| Method | Endpoint                  | Description           |
-|--------|--------------------------|------------------------|
 | GET    | /api/dashboard/stats      | Platform stats        |
 | GET    | /api/dashboard/employer   | Employer stats        |
 | GET    | /api/dashboard/freelancer | Freelancer stats      |
@@ -174,32 +126,6 @@ docker-compose up --build
 | POST   | /recommend   | Job recommendations (TF-IDF + skill)|
 | POST   | /skill-gap   | Skill gap analysis (NLP)            |
 | POST   | /match       | Freelancer matching (multi-factor)  |
-| POST   | /analytics   | Platform analytics                  |
-
----
-
-## 🧪 Testing
-
-```bash
-# Blockchain (Hardhat)
-cd blockchain && npx hardhat test
-
-# AI Service (Pytest)
-cd ai-service && python -m pytest test_main.py -v
-
-# Backend (Maven)
-cd backend && ./mvnw test
-```
-
----
-
-## 📜 Smart Contract
-
-The Escrow contract (`blockchain/contracts/Escrow.sol`) implements:
-- **State Machine**: AWAITING_DEPOSIT → FUNDED → WORK_SUBMITTED → APPROVED → COMPLETED/REFUNDED
-- **Role-based Access**: Only employer can deposit/approve/refund, only freelancer can submit
-- **Event Logging**: All state transitions emit events for frontend tracking
-- **Safety**: Refund possible before work approval
 
 ---
 
@@ -207,13 +133,11 @@ The Escrow contract (`blockchain/contracts/Escrow.sol`) implements:
 
 | Layer      | Technology                           |
 |-----------|--------------------------------------|
-| Frontend  | React 18, Vite, React Router, ethers.js |
+| Frontend  | React 18, Vite, React Router            |
 | Backend   | Spring Boot 3.2, Spring Security, JPA   |
 | Database  | MySQL 8.0                            |
 | AI        | Python, FastAPI, scikit-learn, TF-IDF    |
-| Blockchain| Solidity 0.8.19, Hardhat, ethers.js      |
-| DevOps    | Docker, Docker Compose, Nginx            |
 
 ---
 
-**Built with ❤️ using AI, Blockchain, and Modern Web Technologies**
+**Built with ❤️ using AI and Modern Web Technologies**
