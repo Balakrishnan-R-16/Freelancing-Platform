@@ -103,7 +103,7 @@ export default function FreelancerDashboard() {
 
     const AI_SERVICE_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:8000'
-        : `${window.location.protocol}//${window.location.hostname}:8000`;
+        : 'https://zyntra-ai-service.onrender.com';
 
     const runSmartAIAnalysis = useCallback(async (skills, bio, currentJobs = []) => {
         if (!skills || skills.length === 0) return;

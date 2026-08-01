@@ -277,7 +277,8 @@ export default function EmployerDashboard() {
                         top_n: 10
                     };
 
-                    const aiRes = await fetch('http://localhost:8000/match', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const aiUrl = window.location.hostname === 'localhost' ? 'http://localhost:8000/match' : 'https://zyntra-ai-service.onrender.com/match';
+                    const aiRes = await fetch(aiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (aiRes.ok) {
                         const aiData = await aiRes.json();
                         setFreelancers(aiData.matches.map(m => ({ ...data.find(f => f.id === m.freelancer_id), compatibilityScore: m.compatibility_score, breakdown: m.breakdown })));
