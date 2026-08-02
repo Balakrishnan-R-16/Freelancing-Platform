@@ -36,6 +36,8 @@ htmlcov/
 
 # ── Trained ML Models (large binary files) ───────
 ner_model/
+*.tar.gz
+*.zip
 
 # ── Datasets (large; tracked via Git LFS or DVC) ─
 # Uncomment these if datasets are tracked separately:
