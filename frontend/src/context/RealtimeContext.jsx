@@ -16,7 +16,8 @@ export const RealtimeProvider = ({ children }) => {
         const maxDelay = 30000;
 
         const connect = () => {
-            eventSource = new EventSource('/api/events/stream');
+            const BACKEND_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://zyntra-backend-cn1z.onrender.com';
+            eventSource = new EventSource(`${BACKEND_URL}/api/events/stream`);
 
             eventSource.onopen = () => {
                 console.log('SSE Connected');

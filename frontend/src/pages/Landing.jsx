@@ -47,8 +47,9 @@ export default function Landing() {
 
         fetchStats();
 
-        // Setup SSE for real-time updates
-        const eventSource = new EventSource('/api/events/stream');
+        // Setup SSE for real-time updates directly against Render backend to avoid Vercel 10s serverless proxy timeouts
+        const BACKEND_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://zyntra-backend-cn1z.onrender.com';
+        const eventSource = new EventSource(`${BACKEND_URL}/api/events/stream`);
 
         const handleEvent = () => {
             fetchStats();

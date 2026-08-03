@@ -614,6 +614,9 @@ _NER_MAP: dict[str, str] = {
 
 def get_ner_model():
     global _ner_model
+    # Skip loading 578MB heavy NLP model on free cloud containers (512MB RAM limit) to prevent OOM kills
+    if os.environ.get("DISABLE_HEAVY_NER", "1") == "1":
+        return None
     if _ner_model is None and spacy is not None:
         path = os.path.join(os.path.dirname(__file__), "ner_model")
         if os.path.exists(path):
@@ -834,10 +837,10 @@ def analytics(req: AnalyticsRequest):
 
 @app.post("/ner-parse")
 def ner_parse(req: NerParseRequest):
-    """Extract structured entities from raw resume text using the trained NER model."""
+    """Extract structured entities from raw resume text using the trained NER model or lightweight fallback."""
     nlp = get_ner_model()
     if nlp is None:
-        raise HTTPException(503, "NER model unavailable — ensure ner_model/ exists")
+        return {"skills": _extract_rule_based_skills(req.text)}
     result: dict[str, list] = defaultdict(list)
     for ent in nlp(req.text).ents:
         key = _NER_MAP.get(ent.label_, ent.label_.lower().replace(" ", "_"))
@@ -865,29 +868,31 @@ async def parse_resume(file: UploadFile = File(...)):
         raise HTTPException(400, "Could not extract text — ensure PDF is not a scanned image")
 
     nlp = get_ner_model()
-    if nlp is None:
-        raise HTTPException(503, "NER model unavailable — cannot parse resume")
-
-    # Extract entities from NER
     entities: dict[str, list[str]] = defaultdict(list)
-    for ent in nlp(text).ents:
-        key = _NER_MAP.get(ent.label_, ent.label_.lower().replace(" ", "_"))
-        t   = ent.text.strip()
-        if not t: continue
-        
-        # Aggressive split: NER often groups comma-separated skills into one entity
-        if key == "skills" and any(c in t for c in [",", "•", ";", "|", "\n"]):
-            for part in re.split(r'[,;•\n\|]', t):
-                part = part.strip()
-                # Clean up leading/trailing characters like * or -
-                part = re.sub(r'^[\*\-\s]+|[\*\-\s]+$', '', part)
-                if len(part) >= 2 and len(part.split()) <= 4 and part not in entities[key]:
-                    entities[key].append(part)
-        elif t not in entities[key]:
-            t = re.sub(r'^[\*\-\s]+|[\*\-\s]+$', '', t)
-            entities[key].append(t)
 
-    # Normalise NER skills and add implicit skills from the full resume text.
+    # Extract entities from NER if model loaded; otherwise fall back smoothly to rule-based & semantic parsing
+    if nlp is not None:
+        try:
+            for ent in nlp(text).ents:
+                key = _NER_MAP.get(ent.label_, ent.label_.lower().replace(" ", "_"))
+                t   = ent.text.strip()
+                if not t: continue
+                
+                # Aggressive split: NER often groups comma-separated skills into one entity
+                if key == "skills" and any(c in t for c in [",", "•", ";", "|", "\n"]):
+                    for part in re.split(r'[,;•\n\|]', t):
+                        part = part.strip()
+                        # Clean up leading/trailing characters like * or -
+                        part = re.sub(r'^[\*\-\s]+|[\*\-\s]+$', '', part)
+                        if len(part) >= 2 and len(part.split()) <= 4 and part not in entities[key]:
+                            entities[key].append(part)
+                elif t not in entities[key]:
+                    t = re.sub(r'^[\*\-\s]+|[\*\-\s]+$', '', t)
+                    entities[key].append(t)
+        except Exception as e:
+            logger.warning("NER extraction error: %s. Proceeding with rule-based extraction.", e)
+
+    # Normalise skills and add implicit skills from the full resume text.
     # CRITICAL FIX: Validate NER extractions by demanding they literally exist in the raw text to block Spacy hallucinations!
     raw_skills: list[str] = [s for s in entities.get("skills", []) if s.lower() in text.lower()]
     normalised: list[str] = []
